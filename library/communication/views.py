@@ -38,19 +38,15 @@ class EventListFilterView(generics.ListAPIView):
     def get_queryset(self):
         queryset = Event.objects.all()
 
-        # Фильтрация по дате
         date_param = self.request.query_params.get("date", None)
         if date_param:
-            # Преобразование строки даты в формат datetime
             date_param = parse_datetime(date_param)
             queryset = queryset.filter(date__gte=date_param)
 
-        # Фильтрация по названию
         title_param = self.request.query_params.get("title", None)
         if title_param:
             queryset = queryset.filter(title__icontains=title_param)
 
-        # Сортировка по дате
         queryset = queryset.order_by("date")
 
         return queryset
