@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:7.0.5-alpine
+    hostname: redis
+
+  db:
+    image: postgres:14.6-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+
+  web:
+    build: 
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./library:/library
+
+    command: >
+     sh -c "./entrypoint.sh"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_HOST=db
+      - SECRET_KEY=${SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+
+  worker:
+    build: .
+    hostname: worker
+    command: celery -A library worker --loglevel=info
+    volumes:
+      - ./library:/library
+    links:
+      - redis
+    depends_on:
+      - db
+      - redis
+      - web
+    environment:
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - POSTGRES_HOST=db
+      - POSTGRES_NAME=library
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+
+volumes:
+  db_data:
