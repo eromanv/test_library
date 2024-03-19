@@ -49,15 +49,13 @@ services:
       - redis
       - web
     environment:
+      - DB_HOST=db
+      - DB_NAME=db
+      - DB_PASSWORD=db
+      - DB_USER=db
       - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY}
-      - POSTGRES_HOST=db
-      - POSTGRES_NAME=library
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-
-
 volumes:
   db_data:
